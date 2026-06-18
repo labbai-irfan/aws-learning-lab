@@ -35,9 +35,10 @@ Authored as a structured program by an **AWS Monitoring Specialist**. Builds on 
 | 13 | 100 Interview Questions | [13-100-interview-questions.md](13-100-interview-questions.md) | 2 hrs |
 | 14 | 100 MCQs | [14-100-mcqs.md](14-100-mcqs.md) | 2 hrs |
 | 15 | Hands-on Labs | [15-labs.md](15-labs.md) | 3 hrs |
-| 16 | **Capstone Project:** Full observability for HRMS | [project/README.md](project/README.md) | 6+ hrs |
+| 16 | AWS X-Ray (distributed tracing & ServiceLens) | [16-x-ray.md](16-x-ray.md) | 2 hrs |
+| 17 | **Capstone Project:** Full observability for HRMS | [project/README.md](project/README.md) | 6+ hrs |
 
-**Total:** ~35 hours.
+**Total:** ~37 hours.
 
 ---
 

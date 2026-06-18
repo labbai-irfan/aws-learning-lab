@@ -32,6 +32,7 @@
 ├── 06-step-functions.md               ← Workflow orchestration
 ├── 07-serverless-patterns.md          ← Architecture patterns
 ├── 08-dynamodb.md                     ← DynamoDB deep dive (serverless NoSQL)
+├── 09-cognito.md                      ← Authentication & authorization (user pools, JWT)
 ├── 10-interview-questions.md          ← 60+ interview Q&A
 ├── 11-troubleshooting.md              ← Debug playbook
 └── projects/
@@ -40,10 +41,9 @@
     └── 03-data-pipeline/              ← S3 → Lambda → DynamoDB
 ```
 
-> **📝 Planned (not yet written):** `09-cost-optimization.md`, a `code-examples/` tree,
-> a `12-100-mcqs.md`, a `labs.md`, and `projects/04-api-backend/`. **Security Design** and
-> **Cost Optimization** are currently covered in the inline sections of this README below
-> (numbering jumps 08 → 10 because 09 is still inline).
+> **📝 Planned (not yet written):** a `code-examples/` tree, a `12-100-mcqs.md`, a `labs.md`,
+> and `projects/04-api-backend/`. **Security Design** and **Cost Optimization** are currently
+> covered in the inline sections of this README below.
 
 ---
 
