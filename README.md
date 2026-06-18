@@ -66,10 +66,11 @@ Pick a target and follow the phases that matter most for it.
 |---|---|---|
 | **Cloud Practitioner (CLF-C02)** | 01, 02, 03, 05, 06 + billing | ~88% — exam-ready |
 | **Solutions Architect Associate (SAA-C03)** | 01–13 (breadth) | ~78% — close service breadth + mocks |
-| **Developer Associate (DVA-C02)** | 02, 10, 12 (+ DynamoDB, Cognito) | ~64% — in progress |
+| **Developer Associate (DVA-C02)** | 02, 10, 12 (DynamoDB, Cognito, X-Ray) | ~78% — close (add SAM/Beanstalk) |
 | **DevOps Engineer Pro (DOP-C02)** | 09, 11, 12, 13 | ~58% — in progress |
 
-Full readiness breakdown and gaps: [REPOSITORY-AUDIT-AND-ROADMAP.md](REPOSITORY-AUDIT-AND-ROADMAP.md#phase-8--production--certification-readiness).
+**➡️ Full exam-domain → phase/file mapping and study plans: [CERTIFICATION-GUIDE.md](CERTIFICATION-GUIDE.md).**
+Original readiness breakdown: [REPOSITORY-AUDIT-AND-ROADMAP.md](REPOSITORY-AUDIT-AND-ROADMAP.md#phase-8--production--certification-readiness).
 
 ---
 
