@@ -31,8 +31,10 @@ Authored as a structured program by an **AWS Security Architect**. Builds on [Ph
 | 7 | Troubleshooting | [07-troubleshooting.md](07-troubleshooting.md) | 1 hr |
 | 8 | Incident Response Examples | [08-incident-response-examples.md](08-incident-response-examples.md) | 1.5 hrs |
 | 9 | 100 Interview Questions | [09-100-interview-questions.md](09-100-interview-questions.md) | 2 hrs |
+| 10 | 100 MCQs | [10-100-mcqs.md](10-100-mcqs.md) | 2 hrs |
+| 11 | Hands-On Labs (IAM, KMS, Secrets, detectors) | [11-labs.md](11-labs.md) | 4 hrs |
 
-**Total:** ~16 hours.
+**Total:** ~22 hours.
 
 ---
 
