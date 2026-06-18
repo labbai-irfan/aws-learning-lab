@@ -33,9 +33,11 @@ Authored as a structured program by a **Container Platform Architect**. Builds o
 | 11 | Services (scheduling, ALB, autoscaling) | [11-services.md](11-services.md) | 2 hrs |
 | 12 | Clusters (capacity, scaling, organization) | [12-clusters.md](12-clusters.md) | 1.5 hrs |
 | 13 | Troubleshooting Handbook | [13-troubleshooting-handbook.md](13-troubleshooting-handbook.md) | 2 hrs |
-| 14 | **Capstone:** HRMS Container Deployment on ECS/Fargate | [project/README.md](project/README.md) | 8+ hrs |
+| 14 | 100 MCQs | [14-100-mcqs.md](14-100-mcqs.md) | 2 hrs |
+| 15 | 100 Interview Questions | [15-100-interview-questions.md](15-100-interview-questions.md) | 2 hrs |
+| 16 | **Capstone:** HRMS Container Deployment on ECS/Fargate | [project/README.md](project/README.md) | 8+ hrs |
 
-**Total:** ~30 hours.
+**Total:** ~34 hours.
 
 ---
 
