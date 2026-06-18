@@ -36,15 +36,17 @@
 ├── 10-interview-questions.md          ← 60+ interview Q&A
 ├── 11-troubleshooting.md              ← Debug playbook
 ├── 12-cheatsheet.md                   ← 1-page revision
+├── 13-labs.md                         ← Hands-on labs (Lambda → Cognito → X-Ray)
+├── 14-100-mcqs.md                     ← 100 MCQs
 └── projects/
     ├── 01-ecommerce-order-processing/ ← Event-driven orders
     ├── 02-realtime-notifications/     ← SNS + Lambda + WebSocket
-    └── 03-data-pipeline/              ← S3 → Lambda → DynamoDB
+    ├── 03-data-pipeline/              ← S3 → Lambda → DynamoDB
+    └── 04-api-backend/                ← API GW + Lambda + Cognito + DynamoDB
 ```
 
-> **📝 Planned (not yet written):** a `code-examples/` tree, a `100-mcqs` file, a `labs.md`,
-> and `projects/04-api-backend/`. **Security Design** and **Cost Optimization** are currently
-> covered in the inline sections of this README below.
+> **📝 Note:** runnable code examples live inline in each module and in the `projects/`.
+> **Security Design** and **Cost Optimization** are covered in the inline sections of this README below.
 
 ---
 
@@ -374,8 +376,8 @@ Services: S3 + Lambda + SQS + DynamoDB + EventBridge
 Concepts: Event-driven ETL, batch processing, error recovery
 ```
 
-### Project 4: Multi-Tenant API Backend *(planned — not yet written)*
-**Folder:** `projects/04-api-backend/` *(to be added)*
+### Project 4: Multi-Tenant API Backend
+**File:** [projects/04-api-backend/](projects/04-api-backend/)
 
 ```
 Services: API Gateway + Lambda + Cognito + RDS Aurora Serverless
