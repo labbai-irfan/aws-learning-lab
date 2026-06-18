@@ -26,8 +26,10 @@ Authored as a structured program by an **AWS Load Balancing Architect**. Builds 
 | 4 | Labs (hands-on, console + CLI) | [03-labs.md](03-labs.md) | 5 hrs |
 | 5 | 50 Production Scenarios | [04-scenarios.md](04-scenarios.md) | 2.5 hrs |
 | 6 | Troubleshooting Guide | [05-troubleshooting.md](05-troubleshooting.md) | 1.5 hrs |
+| 7 | 100 MCQs | [07-100-mcqs.md](07-100-mcqs.md) | 2 hrs |
+| 8 | 100 Interview Questions | [08-100-interview-questions.md](08-100-interview-questions.md) | 2 hrs |
 
-**Total:** ~18 hours.
+**Total:** ~22 hours.
 
 ---
 

@@ -26,8 +26,9 @@ Authored as a structured program by an **AWS DNS Expert**. Builds on [Phase 01 â
 | 4 | Troubleshooting | [04-troubleshooting.md](04-troubleshooting.md) | 1 hr |
 | 5 | 100 Interview Questions | [05-100-interview-questions.md](05-100-interview-questions.md) | 2 hrs |
 | 6 | 50 Scenario Questions | [06-50-scenario-questions.md](06-50-scenario-questions.md) | 2 hrs |
+| 7 | 100 MCQs | [07-100-mcqs.md](07-100-mcqs.md) | 2 hrs |
 
-**Total:** ~13 hours.
+**Total:** ~15 hours.
 
 ---
 
