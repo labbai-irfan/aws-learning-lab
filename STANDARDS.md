@@ -61,7 +61,7 @@ Shell: `$` = normal user, `#` = root/sudo. CLI examples use **AWS CLI v2**. Plac
 
 ## 6. Links & renumbering
 
-- Prefer **path-anchored** relative links: `[label](../NN-phase/file.md)`.
+- Prefer **path-anchored** relative links whose target is the real folder path (e.g. a link to phase 07 ends in `../07-elb-autoscaling/README.md`) — this makes a future renumber a simple find-and-replace.
 - If you renumber or rename a phase, update **all** cross-links and visible `Phase NN` labels. Verify with the link checker (§7).
 - Don't hard-code a phase number in prose where a link will do.
 

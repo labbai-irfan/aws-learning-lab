@@ -21,12 +21,13 @@ Authored as a structured program by an **AWS Load Balancing Architect**. Builds 
 |---|--------|------|------|
 | 0 | Start Here (this file) | [README.md](README.md) | 15 min |
 | 1 | ELB Core Concepts (all topics) | [01-elb-core-concepts.md](01-elb-core-concepts.md) | 4 hrs |
-| 2 | Production Architectures (HA / Multi-Server / Auto Scaling) | [02-architectures.md](02-architectures.md) | 2 hrs |
-| 3 | Labs (hands-on, console + CLI) | [03-labs.md](03-labs.md) | 5 hrs |
-| 4 | 50 Production Scenarios | [04-scenarios.md](04-scenarios.md) | 2.5 hrs |
-| 5 | Troubleshooting Guide | [05-troubleshooting.md](05-troubleshooting.md) | 1.5 hrs |
+| 2 | **EC2 Auto Scaling** (ASG · Launch Templates · scaling policies · instance refresh) | [06-auto-scaling.md](06-auto-scaling.md) | 2 hrs |
+| 3 | Production Architectures (HA / Multi-Server / Auto Scaling) | [02-architectures.md](02-architectures.md) | 2 hrs |
+| 4 | Labs (hands-on, console + CLI) | [03-labs.md](03-labs.md) | 5 hrs |
+| 5 | 50 Production Scenarios | [04-scenarios.md](04-scenarios.md) | 2.5 hrs |
+| 6 | Troubleshooting Guide | [05-troubleshooting.md](05-troubleshooting.md) | 1.5 hrs |
 
-**Total:** ~16 hours.
+**Total:** ~18 hours.
 
 ---
 
