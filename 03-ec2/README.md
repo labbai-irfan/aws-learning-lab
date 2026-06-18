@@ -31,7 +31,8 @@ Authored as a structured program by an **AWS Compute Specialist**. Builds on [Ph
 | 9 | 100 MCQs | [09-100-mcqs.md](09-100-mcqs.md) | 2 hrs |
 | 10 | 100 Interview Questions | [10-100-interview-questions.md](10-100-interview-questions.md) | 2 hrs |
 | 11 | 50 Production Scenarios | [11-50-production-scenarios.md](11-50-production-scenarios.md) | 2 hrs |
-| 12 | **Capstone Project:** React + Node + MySQL on EC2 | [project/README.md](project/README.md) | 6+ hrs |
+| 12 | Cheat Sheet (1-page revision) | [12-cheatsheet.md](12-cheatsheet.md) | 30 min |
+| 13 | **Capstone Project:** React + Node + MySQL on EC2 | [project/README.md](project/README.md) | 6+ hrs |
 
 **Total:** ~30 hours.
 

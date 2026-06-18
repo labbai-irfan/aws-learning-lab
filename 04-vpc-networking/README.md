@@ -29,7 +29,8 @@ Authored as a structured program by an **AWS Networking Architect**. Builds on [
 | 7 | 100 MCQs | [07-100-mcqs.md](07-100-mcqs.md) | 2 hrs |
 | 8 | 100 Interview Questions | [08-100-interview-questions.md](08-100-interview-questions.md) | 3 hrs |
 | 9 | 50 Scenario Questions | [09-50-scenario-questions.md](09-50-scenario-questions.md) | 2 hrs |
-| 10 | **Capstone Project:** Production 3-tier VPC in Terraform | [project/README.md](project/README.md) | 4+ hrs |
+| 10 | Cheat Sheet (1-page revision) | [10-cheatsheet.md](10-cheatsheet.md) | 30 min |
+| 11 | **Capstone Project:** Production 3-tier VPC in Terraform | [project/README.md](project/README.md) | 4+ hrs |
 
 **Total:** ~27 hours.
 

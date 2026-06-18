@@ -34,7 +34,8 @@ Authored as a structured program by an **AWS Database Architect**. Builds on [Ph
 | 12 | 100 MCQs | [12-100-mcqs.md](12-100-mcqs.md) | 2 hrs |
 | 13 | 100 Interview Questions | [13-100-interview-questions.md](13-100-interview-questions.md) | 2 hrs |
 | 14 | 50 Production Scenarios | [14-50-scenario-questions.md](14-50-scenario-questions.md) | 2 hrs |
-| 15 | **Capstone Project:** HRMS MySQL on RDS | [project/README.md](project/README.md) | 6+ hrs |
+| 15 | Cheat Sheet (1-page revision) | [15-cheatsheet.md](15-cheatsheet.md) | 30 min |
+| 16 | **Capstone Project:** HRMS MySQL on RDS | [project/README.md](project/README.md) | 6+ hrs |
 
 **Total:** ~35 hours.
 
