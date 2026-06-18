@@ -27,6 +27,7 @@ Authored as a structured program by an **AWS DNS Expert**. Builds on [Phase 01 â
 | 5 | 100 Interview Questions | [05-100-interview-questions.md](05-100-interview-questions.md) | 2 hrs |
 | 6 | 50 Scenario Questions | [06-50-scenario-questions.md](06-50-scenario-questions.md) | 2 hrs |
 | 7 | 100 MCQs | [07-100-mcqs.md](07-100-mcqs.md) | 2 hrs |
+| 8 | Cheat Sheet (1-page revision) | [08-cheatsheet.md](08-cheatsheet.md) | 30 min |
 
 **Total:** ~15 hours.
 

@@ -37,7 +37,8 @@ Authored as a structured program by a **Principal Cloud Architect**. Builds on a
 | 15 | Troubleshooting Handbook | [15-troubleshooting-handbook.md](15-troubleshooting-handbook.md) | 2 hrs |
 | 16 | 200 Interview Questions | [16-200-interview-questions.md](16-200-interview-questions.md) | 4 hrs |
 | 17 | 200 MCQs | [17-200-mcqs.md](17-200-mcqs.md) | 4 hrs |
-| 18 | **Capstone:** Production HRMS Infrastructure | [project/README.md](project/README.md) | 10+ hrs |
+| 18 | Cheat Sheet (1-page revision) | [18-cheatsheet.md](18-cheatsheet.md) | 30 min |
+| 19 | **Capstone:** Production HRMS Infrastructure | [project/README.md](project/README.md) | 10+ hrs |
 
 **Total:** ~60 hours.
 
