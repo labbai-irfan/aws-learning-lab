@@ -35,13 +35,14 @@
 ├── 09-cognito.md                      ← Authentication & authorization (user pools, JWT)
 ├── 10-interview-questions.md          ← 60+ interview Q&A
 ├── 11-troubleshooting.md              ← Debug playbook
+├── 12-cheatsheet.md                   ← 1-page revision
 └── projects/
     ├── 01-ecommerce-order-processing/ ← Event-driven orders
     ├── 02-realtime-notifications/     ← SNS + Lambda + WebSocket
     └── 03-data-pipeline/              ← S3 → Lambda → DynamoDB
 ```
 
-> **📝 Planned (not yet written):** a `code-examples/` tree, a `12-100-mcqs.md`, a `labs.md`,
+> **📝 Planned (not yet written):** a `code-examples/` tree, a `100-mcqs` file, a `labs.md`,
 > and `projects/04-api-backend/`. **Security Design** and **Cost Optimization** are currently
 > covered in the inline sections of this README below.
 

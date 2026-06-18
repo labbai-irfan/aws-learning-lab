@@ -35,7 +35,8 @@ Authored as a structured program by a **Container Platform Architect**. Builds o
 | 13 | Troubleshooting Handbook | [13-troubleshooting-handbook.md](13-troubleshooting-handbook.md) | 2 hrs |
 | 14 | 100 MCQs | [14-100-mcqs.md](14-100-mcqs.md) | 2 hrs |
 | 15 | 100 Interview Questions | [15-100-interview-questions.md](15-100-interview-questions.md) | 2 hrs |
-| 16 | **Capstone:** HRMS Container Deployment on ECS/Fargate | [project/README.md](project/README.md) | 8+ hrs |
+| 16 | Cheat Sheet (1-page revision) | [16-cheatsheet.md](16-cheatsheet.md) | 30 min |
+| 17 | **Capstone:** HRMS Container Deployment on ECS/Fargate | [project/README.md](project/README.md) | 8+ hrs |
 
 **Total:** ~34 hours.
 
