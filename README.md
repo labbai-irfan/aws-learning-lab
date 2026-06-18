@@ -118,6 +118,8 @@ NN-phase-name/
 
 **Symbol legend used throughout:** 💡 tip · ⚠️ gotcha · 🛠️ hands-on · 💰 cost · 🔒 security · 🏗️ architecture decision.
 
+**Quick navigation:** 🔎 [SERVICES-INDEX.md](SERVICES-INDEX.md) — *"where is service X taught?"* · 📖 [GLOSSARY.md](GLOSSARY.md) — key terms · 📐 [STANDARDS.md](STANDARDS.md) — conventions.
+
 ---
 
 ## 🚀 How to Use This Repo
