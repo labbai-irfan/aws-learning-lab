@@ -32,6 +32,7 @@ Phases: [01 Fundamentals](01-aws-fundamentals/) · [02 IAM/Security](02-iam-secu
 | **S3** | [05 S3](05-s3/README.md) | [01-s3-core-concepts.md](05-s3/01-s3-core-concepts.md) |
 | **S3 Glacier / lifecycle** | [05 S3](05-s3/README.md) | [03-cost-optimization.md](05-s3/03-cost-optimization.md) |
 | **EBS** | [03 EC2](03-ec2/README.md) | [01-ec2-core-concepts.md](03-ec2/01-ec2-core-concepts.md) |
+| **EFS / FSx** (file storage) | [05 S3](05-s3/README.md) | [11-efs-and-fsx.md](05-s3/11-efs-and-fsx.md) |
 
 ## Databases
 | Service | Primary phase | Key file |
@@ -52,6 +53,8 @@ Phases: [01 Fundamentals](01-aws-fundamentals/) · [02 IAM/Security](02-iam-secu
 | **WAF & Shield** | [13 Advanced](13-advanced-aws/README.md) | [06-waf-shield.md](13-advanced-aws/06-waf-shield.md) |
 | **GuardDuty / Config / Security Hub / Inspector / Macie** | [02 IAM/Security](02-iam-security/README.md) | [03-security-audits.md](02-iam-security/03-security-audits.md) |
 | **IAM Access Analyzer** | [02 IAM/Security](02-iam-security/README.md) | [11-labs.md](02-iam-security/11-labs.md) |
+| **AWS Config** (compliance/governance) | [02 IAM/Security](02-iam-security/README.md) | [13-aws-config.md](02-iam-security/13-aws-config.md) |
+| **Systems Manager (SSM)** | [09 CloudWatch](09-cloudwatch/README.md) | [17-systems-manager.md](09-cloudwatch/17-systems-manager.md) |
 
 ## Application Integration (Messaging)
 | Service | Primary phase | Key file |
@@ -60,6 +63,7 @@ Phases: [01 Fundamentals](01-aws-fundamentals/) · [02 IAM/Security](02-iam-secu
 | **SNS** | [10 Serverless](10-serverless/README.md) | [05-sns-integration.md](10-serverless/05-sns-integration.md) |
 | **EventBridge** | [10 Serverless](10-serverless/README.md) | [03-eventbridge.md](10-serverless/03-eventbridge.md) |
 | **Step Functions** | [10 Serverless](10-serverless/README.md) | [06-step-functions.md](10-serverless/06-step-functions.md) |
+| **Kinesis** (streaming) | [13 Advanced](13-advanced-aws/README.md) | [03-sqs-sns.md](13-advanced-aws/03-sqs-sns.md) |
 
 ## Management & Monitoring
 | Service | Primary phase | Key file |
@@ -84,6 +88,7 @@ Phases: [01 Fundamentals](01-aws-fundamentals/) · [02 IAM/Security](02-iam-secu
 | **GitHub Actions** | [12 CI/CD](12-cicd/README.md) | [labs/lab-01-github-actions.md](12-cicd/labs/lab-01-github-actions.md) |
 | **Terraform** | [13 Advanced](13-advanced-aws/README.md) | [04-terraform.md](13-advanced-aws/04-terraform.md) |
 | **CloudFormation / CDK** | [13 Advanced](13-advanced-aws/README.md) | [05-cloudformation.md](13-advanced-aws/05-cloudformation.md) |
+| **AWS SAM / Elastic Beanstalk** | [12 CI/CD](12-cicd/README.md) | [docs/sam-and-beanstalk.md](12-cicd/docs/sam-and-beanstalk.md) |
 
 ## Architecture & DR (cross-cutting)
 | Topic | Primary phase | Key file |

@@ -5,9 +5,9 @@
 | Exam | Code | This repo's readiness | Best for |
 |---|---|---|---|
 | Cloud Practitioner | CLF-C02 | **~88%** | Beginners, breadth, non-engineers |
-| Solutions Architect Associate | SAA-C03 | **~80%** | Designing AWS systems |
-| Developer Associate | DVA-C02 | **~78%** | Building apps on AWS |
-| DevOps Engineer Professional | DOP-C02 | **~62%** | CI/CD, IaC, ops at scale |
+| Solutions Architect Associate | SAA-C03 | **~82%** | Designing AWS systems |
+| Developer Associate | DVA-C02 | **~82%** | Building apps on AWS |
+| DevOps Engineer Professional | DOP-C02 | **~66%** | CI/CD, IaC, ops at scale |
 
 Legend: ✅ well covered · 🟡 partial · ❌ gap to fill.
 
@@ -37,7 +37,7 @@ Legend: ✅ well covered · 🟡 partial · ❌ gap to fill.
 | **Design Cost-Optimized Architectures (20%)** | [03 EC2 cost](03-ec2/04-cost-calculation.md), [05 S3 classes](05-s3/03-cost-optimization.md), [06 RDS cost](06-rds/07-scaling-and-cost-optimization.md) | ✅ |
 
 **Study path:** Phases 03→13 in order, focusing on each phase's **architectures** + **cheat sheet** + MCQs.
-**Gaps to close:** breadth services — **EFS/FSx**, **Kinesis/Athena/Glue**, **Storage Gateway/DataSync**, deeper **Transit Gateway/Direct Connect**, **Aurora/DynamoDB** depth. Then a full 65-question timed mock. **Verdict: ~80%, close breadth + drill mocks.**
+**Gaps to close:** remaining breadth — **Athena/Glue**, **Storage Gateway/DataSync**, deeper **Transit Gateway/Direct Connect**, **Aurora** depth. (**EFS/FSx** and **Kinesis** are now covered.) Then a full 65-question timed mock. **Verdict: ~82%, close remaining breadth + drill mocks.**
 
 ---
 
@@ -47,11 +47,11 @@ Legend: ✅ well covered · 🟡 partial · ❌ gap to fill.
 |---|---|---|
 | **Development with AWS Services (32%)** | [10 Lambda](10-serverless/01-lambda-core-concepts.md)/[API GW](10-serverless/02-api-gateway.md)/[DynamoDB](10-serverless/08-dynamodb.md)/[SQS/SNS/EventBridge/Step Functions](10-serverless/README.md) | ✅ |
 | **Security (26%)** | [10 Cognito](10-serverless/09-cognito.md), [02 IAM/KMS/Secrets](02-iam-security/README.md) | ✅ |
-| **Deployment (24%)** | [12 CI/CD](12-cicd/README.md) (CodeBuild/Deploy/Pipeline, SAM-style), [11 ECR/ECS](11-docker-ecs/README.md) | 🟡 (add SAM + Elastic Beanstalk specifics) |
+| **Deployment (24%)** | [12 CI/CD](12-cicd/README.md) (CodeBuild/Deploy/Pipeline, [SAM & Beanstalk](12-cicd/docs/sam-and-beanstalk.md)), [11 ECR/ECS](11-docker-ecs/README.md) | ✅ |
 | **Troubleshooting & Optimization (18%)** | [09 X-Ray](09-cloudwatch/16-x-ray.md)/[CloudWatch](09-cloudwatch/README.md), [10 troubleshooting](10-serverless/11-troubleshooting.md) | ✅ |
 
 **Study path:** Phase 10 in full (incl. DynamoDB + Cognito) → Phase 12 → [09 X-Ray](09-cloudwatch/16-x-ray.md) → [02 KMS/Secrets](02-iam-security/12-cheatsheet.md).
-**Gaps to close:** **SAM**, **Elastic Beanstalk**, deeper encryption-SDK/KMS for developers, API Gateway caching/throttling specifics. **Verdict: ~78% — DynamoDB/Cognito/X-Ray now covered; add SAM + Beanstalk.**
+**Gaps to close:** deeper encryption-SDK/KMS for developers, API Gateway caching/throttling specifics. (**SAM + Elastic Beanstalk** now covered.) **Verdict: ~82% — core dev services, auth, tracing, and managed deploys all covered.**
 
 ---
 
@@ -64,20 +64,20 @@ Legend: ✅ well covered · 🟡 partial · ❌ gap to fill.
 | **Resilient Cloud Solutions (15%)** | [07 ASG](07-elb-autoscaling/06-auto-scaling.md), [13 multi-Region/DR](13-advanced-aws/09-multi-region-dr.md) | ✅ |
 | **Monitoring & Logging (15%)** | [09 CloudWatch + X-Ray](09-cloudwatch/README.md) | ✅ |
 | **Incident & Event Response (14%)** | [02 incident response](02-iam-security/08-incident-response-examples.md), [09 EventBridge/alarms](09-cloudwatch/06-events.md) | 🟡 |
-| **Security & Compliance (17%)** | [02 IAM/GuardDuty/Config/Security Hub](02-iam-security/README.md) | ✅ |
+| **Security & Compliance (17%)** | [02 IAM/GuardDuty/Security Hub](02-iam-security/README.md), [02 AWS Config](02-iam-security/13-aws-config.md) | ✅ |
 
 **Study path:** Phases 11→12→13 + 09 + 02, emphasizing automation and IaC.
-**Gaps to close (Pro-level depth):** **AWS Config** conformance packs + auto-remediation, advanced **EventBridge** automation, **CodeDeploy** deep config, OpsWorks/Beanstalk deploys. (**Systems Manager** is now covered — [09/17](09-cloudwatch/17-systems-manager.md).) **Verdict: ~62% — strong CI/CD + IaC + SSM base; needs Config automation depth.**
+**Gaps to close (Pro-level depth):** advanced **EventBridge** automation, **CodeDeploy** deep config, OpsWorks deploys, and deeper hands-on. (**Systems Manager** — [09/17](09-cloudwatch/17-systems-manager.md) — and **AWS Config** — [02/13](02-iam-security/13-aws-config.md) — are now covered.) **Verdict: ~66% — strong CI/CD + IaC + SSM + Config base; needs Pro-level scenario depth.**
 
 ---
 
 ## Cross-exam gap backlog (build these to raise scores)
 1. **DynamoDB** ✅ done · **Cognito** ✅ done · **X-Ray** ✅ done · **Auto Scaling** ✅ done.
 2. **Systems Manager (SSM)** ✅ done — [09/17](09-cloudwatch/17-systems-manager.md).
-3. **EFS/FSx, Kinesis/Athena/Glue, Storage Gateway/DataSync** — SAA breadth. ❌
-4. **SAM + Elastic Beanstalk** — DVA deployment. ❌
-5. **AWS Config conformance + auto-remediation** — DevOps Pro. ❌
-6. One **full timed mock** per target cert. ❌
+3. **EFS/FSx** ✅, **Kinesis** ✅ done. (Athena/Glue, Storage Gateway/DataSync still ❌ for full SAA breadth.)
+4. **SAM + Elastic Beanstalk** ✅ done — [12/docs](12-cicd/docs/sam-and-beanstalk.md).
+5. **AWS Config** ✅ done — [02/13](02-iam-security/13-aws-config.md).
+6. One **full timed mock** per target cert. ❌ (the main remaining item)
 
 ---
 

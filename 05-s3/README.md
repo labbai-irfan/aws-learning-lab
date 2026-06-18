@@ -30,7 +30,8 @@ Authored as a structured program by an **AWS Storage Architect**. Builds on [Pha
 | 8 | 100 Interview Questions | [08-100-interview-questions.md](08-100-interview-questions.md) | 2 hrs |
 | 9 | 50 Scenario Questions | [09-50-scenario-questions.md](09-50-scenario-questions.md) | 2 hrs |
 | 10 | Cheat Sheet (1-page revision) | [10-cheatsheet.md](10-cheatsheet.md) | 30 min |
-| 11 | **Capstone Project:** Secure file upload (React + Node + S3) | [project/README.md](project/README.md) | 6+ hrs |
+| 11 | EFS & FSx — file storage (breadth top-up) | [11-efs-and-fsx.md](11-efs-and-fsx.md) | 45 min |
+| 12 | **Capstone Project:** Secure file upload (React + Node + S3) | [project/README.md](project/README.md) | 6+ hrs |
 
 **Total:** ~25 hours.
 

@@ -15,6 +15,8 @@
 - **CloudFront** — global CDN that caches content at edge locations.
 - **CloudTrail** — records AWS API calls (audit: *who did what*).
 - **CloudWatch** — metrics, logs, alarms, dashboards (operational: *is it healthy*).
+- **Config (AWS Config)** — records resource configuration + change history and evaluates compliance rules (vs CloudTrail = API audit). ([02](02-iam-security/13-aws-config.md))
+- **Conformance pack** — a deployable bundle of AWS Config rules + remediations (a compliance baseline).
 - **CNAME** — DNS record mapping a name to another name; **not** allowed at the apex.
 - **Cold start** — latency when Lambda initializes a new execution environment.
 - **Cognito** — managed auth: User Pools (authN → JWTs) + Identity Pools (authZ → AWS creds). ([10](10-serverless/09-cognito.md))
@@ -25,6 +27,8 @@
 - **EBS** — network-attached block storage for EC2 (persists separately from the instance).
 - **EC2** — virtual servers in the cloud. ([03](03-ec2/README.md))
 - **ECR / ECS / Fargate** — container registry / orchestrator / serverless container runtime. ([11](11-docker-ecs/README.md))
+- **EFS / FSx** — shared **file** storage: EFS = managed NFS (Linux, multi-AZ, elastic); FSx = managed Windows / Lustre / NetApp ONTAP / OpenZFS. ([05](05-s3/11-efs-and-fsx.md))
+- **Elastic Beanstalk** — PaaS that provisions and manages EC2 + ALB + Auto Scaling for an uploaded app. ([12](12-cicd/docs/sam-and-beanstalk.md))
 - **Elastic IP** — static public IPv4 you own.
 - **ENI** — virtual network interface attached to an instance/task.
 - **EventBridge** — event bus that routes events to targets by rules; supports schedules.
@@ -40,6 +44,7 @@
 - **Instance profile** — wraps an IAM role so an EC2 instance gets AWS credentials without static keys.
 
 ## K–N
+- **Kinesis** — real-time streaming: Data Streams (sharded, ordered, replayable), Firehose (managed delivery to S3/Redshift), Managed Flink (analytics). ([13](13-advanced-aws/03-sqs-sns.md))
 - **KMS** — Key Management Service for encryption keys; envelope encryption.
 - **Lambda** — serverless functions; pay per ms, up to 15 min. ([10](10-serverless/README.md))
 - **Launch Template** — versioned blueprint for new EC2 instances (used by ASG).
@@ -61,7 +66,9 @@
 - **RTO / RPO** — Recovery Time / Point Objective (downtime / data-loss tolerance for DR).
 
 ## S–Z
+- **SAM (Serverless Application Model)** — a CloudFormation extension for concise serverless IaC + local testing (`sam build/deploy`). ([12](12-cicd/docs/sam-and-beanstalk.md))
 - **SCP (Service Control Policy)** — Organizations guardrail capping permissions for an OU/account (doesn't grant).
+- **Systems Manager (SSM)** — operations suite: Session Manager (no-SSH access), Parameter Store, Patch Manager, Run Command, Automation. ([09](09-cloudwatch/17-systems-manager.md))
 - **Security Group** — stateful, instance-level firewall (allow-only).
 - **Secrets Manager** — stores and auto-rotates credentials/API keys.
 - **Shared Responsibility Model** — AWS secures *the cloud*; you secure what you put *in* it.

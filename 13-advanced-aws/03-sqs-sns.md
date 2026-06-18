@@ -1,6 +1,8 @@
-# Module 3 — SQS & SNS: Messaging & Events
+# Module 3 — SQS, SNS & Kinesis: Messaging & Streaming
 
-> Decouple and scale with SQS (queuing) and SNS (pub/sub fan-out). Production patterns, DLQs, FIFO, filtering, and the standard architecture combos.
+> Decouple and scale with SQS (queuing), SNS (pub/sub fan-out), and Kinesis (real-time streaming). Production patterns, DLQs, FIFO, filtering, and the standard architecture combos.
+
+> 📎 **New to SQS/SNS?** The fundamentals are taught in **[Phase 10 — Serverless](../10-serverless/04-sqs-integration.md)** (and [SNS here](../10-serverless/05-sns-integration.md)). This module assumes those basics and focuses on **advanced/enterprise patterns** plus **Kinesis** (streaming) — the piece the serverless phase doesn't cover.
 
 ---
 
@@ -147,11 +149,39 @@ Multiple consumers on the same SQS queue — SQS distributes work across them:
 
 ---
 
+## Part C — Kinesis (real-time streaming)
+
+> Use Kinesis when you need **ordered, replayable, high-throughput streaming** of many records to multiple independent consumers — analytics, clickstreams, IoT, logs, CDC. (SQS = work queue; Kinesis = data stream you can re-read.)
+
+### SQS vs SNS vs Kinesis — the decision
+| | **SQS** | **SNS** | **Kinesis Data Streams** |
+|---|---|---|---|
+| Model | queue (point-to-point) | pub/sub (push) | ordered stream (pull, replayable) |
+| Consumers | competing (one gets each msg) | fan-out (all get each msg) | many, each reads independently |
+| Ordering | FIFO option | no | **per-shard ordering** |
+| Replay | no (deleted after read) | no | **yes — retention 1–365 days** |
+| Scale unit | unlimited (standard) | topics | **shards** (1 MB/s in, 2 MB/s out each) |
+| Best for | async jobs / decoupling | notifications / fan-out | real-time analytics, large streams |
+
+### Kinesis family
+- **Data Streams** — you manage **shards**; low-latency, replayable; consumers via Lambda/KCL.
+- **Data Firehose** — fully managed delivery to **S3 / Redshift / OpenSearch / Splunk** with buffering + transform (near-real-time, **no shards to manage**).
+- **Managed Service for Apache Flink** — SQL/Flink analytics over streaming data.
+
+### Key concepts
+- **Shard** = throughput unit; the **partition key** spreads records across shards (avoid hot shards).
+- **Retention** lets late or replay consumers re-read — unlike SQS/SNS where data is gone after delivery.
+- **Enhanced fan-out** gives each consumer a dedicated 2 MB/s pipe.
+- 💡 **Exam:** "real-time, ordered, replayable, multiple consumers, big throughput" → **Kinesis**. "buffer async jobs" → **SQS**. "push to many subscribers" → **SNS**. "stream → S3/Redshift, no code" → **Firehose**.
+
+---
+
 ## ✅ Key decisions
 - High-throughput async task: **Standard SQS** + competing consumers.
 - Ordered/financial workflow: **FIFO SQS** with `MessageGroupId`.
 - Fan-out to N consumers: **SNS → SQS** fan-out pattern.
 - Dead letters: always attach a **DLQ** with a CloudWatch alarm.
 - Serverless consumer: **SQS → Lambda** event source mapping.
+- Real-time, replayable analytics stream: **Kinesis Data Streams**; zero-code delivery to S3/Redshift → **Firehose**.
 
 ➡️ Next: [Module 4 — Terraform](04-terraform.md)

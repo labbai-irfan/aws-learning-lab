@@ -47,7 +47,8 @@
 │   ├── canary-deployment.md
 │   ├── github-actions-vs-codepipeline.md
 │   ├── interview-guide.md             ← 60+ Q&A + scenarios
-│   └── cheatsheet.md                  ← 1-page revision
+│   ├── cheatsheet.md                  ← 1-page revision
+│   └── sam-and-beanstalk.md           ← SAM + Elastic Beanstalk (managed deploys)
 └── labs/
     ├── lab-01-github-actions.md
     ├── lab-02-codebuild.md
@@ -133,7 +134,7 @@ docker build -t myapp .
 
 1. Read [docs/deployment-strategies.md](docs/deployment-strategies.md)
 2. Do [labs/lab-01-github-actions.md](labs/lab-01-github-actions.md) → [lab-05](labs/lab-05-canary-lambda.md) in order
-3. Study [docs/interview-guide.md](docs/interview-guide.md) and the [docs/cheatsheet.md](docs/cheatsheet.md)
+3. Study [docs/interview-guide.md](docs/interview-guide.md), the [docs/cheatsheet.md](docs/cheatsheet.md), and [docs/sam-and-beanstalk.md](docs/sam-and-beanstalk.md)
 4. Build the [production-pipeline.yml](.github/workflows/production-pipeline.yml) for your own app
 
 ---

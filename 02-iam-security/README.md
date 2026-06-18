@@ -34,8 +34,9 @@ Authored as a structured program by an **AWS Security Architect**. Builds on [Ph
 | 10 | 100 MCQs | [10-100-mcqs.md](10-100-mcqs.md) | 2 hrs |
 | 11 | Hands-On Labs (IAM, KMS, Secrets, detectors) | [11-labs.md](11-labs.md) | 4 hrs |
 | 12 | Cheat Sheet (1-page revision) | [12-cheatsheet.md](12-cheatsheet.md) | 30 min |
+| 13 | AWS Config — compliance & governance (breadth top-up) | [13-aws-config.md](13-aws-config.md) | 45 min |
 
-**Total:** ~22 hours.
+**Total:** ~23 hours.
 
 ---
 

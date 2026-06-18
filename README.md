@@ -65,9 +65,9 @@ Pick a target and follow the phases that matter most for it.
 | Certification | Phases to focus on | This repo's readiness |
 |---|---|---|
 | **Cloud Practitioner (CLF-C02)** | 01, 02, 03, 05, 06 + billing | ~88% — exam-ready |
-| **Solutions Architect Associate (SAA-C03)** | 01–13 (breadth) | ~78% — close service breadth + mocks |
-| **Developer Associate (DVA-C02)** | 02, 10, 12 (DynamoDB, Cognito, X-Ray) | ~78% — close (add SAM/Beanstalk) |
-| **DevOps Engineer Pro (DOP-C02)** | 09, 11, 12, 13 | ~62% — in progress |
+| **Solutions Architect Associate (SAA-C03)** | 01–13 (breadth) | ~82% — close remaining breadth + mocks |
+| **Developer Associate (DVA-C02)** | 02, 10, 12 (DynamoDB, Cognito, X-Ray, SAM) | ~82% — strong; add timed mocks |
+| **DevOps Engineer Pro (DOP-C02)** | 09, 11, 12, 13 | ~66% — in progress |
 
 **➡️ Full exam-domain → phase/file mapping and study plans: [CERTIFICATION-GUIDE.md](CERTIFICATION-GUIDE.md).**
 Original readiness breakdown: [REPOSITORY-AUDIT-AND-ROADMAP.md](REPOSITORY-AUDIT-AND-ROADMAP.md#phase-8--production--certification-readiness).
