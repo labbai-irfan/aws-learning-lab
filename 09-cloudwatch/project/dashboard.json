@@ -1,0 +1,121 @@
+{
+  "//": "HRMS-Prod dashboard. Replace ACCT, the ALB ARN suffix (app/hrms/abc), and instance ids before deploying.",
+  "widgets": [
+    {
+      "type": "text", "x": 0, "y": 0, "width": 24, "height": 1,
+      "properties": { "markdown": "# HRMS Production — [Runbooks](https://github.com/yourorg/hrms/blob/main/09-cloudwatch/11-monitoring-playbooks.md) · Region us-east-1" }
+    },
+
+    { "type": "text", "x": 0, "y": 1, "width": 24, "height": 1,
+      "properties": { "markdown": "## 1 · User impact" } },
+    {
+      "type": "metric", "x": 0, "y": 2, "width": 8, "height": 6,
+      "properties": {
+        "title": "ALB 5XX rate %", "region": "us-east-1", "stat": "Sum", "period": 300,
+        "metrics": [
+          [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/hrms/abc", { "id": "r", "visible": false } ],
+          [ ".", "HTTPCode_Target_5XX_Count", ".", ".", { "id": "e", "visible": false } ],
+          [ { "expression": "100*(e/r)", "label": "5xx %", "id": "rate" } ]
+        ],
+        "yAxis": { "left": { "min": 0 } },
+        "annotations": { "horizontal": [ { "label": "Sev1", "value": 1 } ] }
+      }
+    },
+    {
+      "type": "metric", "x": 8, "y": 2, "width": 8, "height": 6,
+      "properties": {
+        "title": "p99 latency", "region": "us-east-1", "period": 300,
+        "metrics": [ [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "app/hrms/abc", { "stat": "p99" } ] ],
+        "annotations": { "horizontal": [ { "label": "SLO 1s", "value": 1 } ] }
+      }
+    },
+    {
+      "type": "metric", "x": 16, "y": 2, "width": 8, "height": 6,
+      "properties": {
+        "title": "Requests & healthy hosts", "region": "us-east-1", "period": 300,
+        "metrics": [
+          [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/hrms/abc", { "stat": "Sum" } ],
+          [ ".", "HealthyHostCount", "TargetGroup", "targetgroup/hrms/xyz", { "stat": "Average", "yAxis": "right" } ]
+        ]
+      }
+    },
+
+    { "type": "text", "x": 0, "y": 8, "width": 24, "height": 1,
+      "properties": { "markdown": "## 2 · Backend (EC2)" } },
+    {
+      "type": "metric", "x": 0, "y": 9, "width": 8, "height": 6,
+      "properties": {
+        "title": "EC2 CPU %", "region": "us-east-1", "period": 300,
+        "metrics": [ [ "AWS/EC2", "CPUUtilization", "InstanceId", "i-0abc", { "stat": "Average" } ] ],
+        "annotations": { "horizontal": [ { "label": "Sev2 80%", "value": 80 } ] }
+      }
+    },
+    {
+      "type": "metric", "x": 8, "y": 9, "width": 8, "height": 6,
+      "properties": {
+        "title": "Memory & disk %", "region": "us-east-1", "period": 300,
+        "metrics": [
+          [ "CWAgent", "mem_used_percent", "InstanceId", "i-0abc" ],
+          [ "CWAgent", "disk_used_percent", "InstanceId", "i-0abc", "path", "/" ]
+        ],
+        "annotations": { "horizontal": [ { "label": "85%", "value": 85 } ] }
+      }
+    },
+    {
+      "type": "metric", "x": 16, "y": 9, "width": 8, "height": 6,
+      "properties": {
+        "title": "App error count (from logs)", "region": "us-east-1", "period": 300,
+        "metrics": [ [ "HRMS/App", "ApiErrorCount", { "stat": "Sum" } ] ]
+      }
+    },
+
+    { "type": "text", "x": 0, "y": 15, "width": 24, "height": 1,
+      "properties": { "markdown": "## 3 · Database (RDS)" } },
+    {
+      "type": "metric", "x": 0, "y": 16, "width": 8, "height": 6,
+      "properties": {
+        "title": "RDS CPU & connections", "region": "us-east-1", "period": 300,
+        "metrics": [
+          [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "hrms-db" ],
+          [ ".", "DatabaseConnections", ".", ".", { "yAxis": "right" } ]
+        ]
+      }
+    },
+    {
+      "type": "metric", "x": 8, "y": 16, "width": 8, "height": 6,
+      "properties": {
+        "title": "RDS free storage (bytes)", "region": "us-east-1", "period": 300,
+        "metrics": [ [ "AWS/RDS", "FreeStorageSpace", "DBInstanceIdentifier", "hrms-db" ] ],
+        "annotations": { "horizontal": [ { "label": "Sev1 5GB", "value": 5000000000 } ] }
+      }
+    },
+    {
+      "type": "metric", "x": 16, "y": 16, "width": 8, "height": 6,
+      "properties": {
+        "title": "RDS replica lag (s)", "region": "us-east-1", "period": 300,
+        "metrics": [ [ "AWS/RDS", "ReplicaLag", "DBInstanceIdentifier", "hrms-db-replica" ] ]
+      }
+    },
+
+    { "type": "text", "x": 0, "y": 22, "width": 24, "height": 1,
+      "properties": { "markdown": "## 4 · Live errors & alarms" } },
+    {
+      "type": "log", "x": 0, "y": 23, "width": 16, "height": 6,
+      "properties": {
+        "title": "Recent errors (/hrms/api)", "region": "us-east-1",
+        "query": "SOURCE '/hrms/api' | fields @timestamp, level, route, msg | filter level = 'error' | sort @timestamp desc | limit 20"
+      }
+    },
+    {
+      "type": "alarm", "x": 16, "y": 23, "width": 8, "height": 6,
+      "properties": {
+        "title": "Alarm status",
+        "alarms": [
+          "arn:aws:cloudwatch:us-east-1:ACCT:alarm:hrms-user-impact",
+          "arn:aws:cloudwatch:us-east-1:ACCT:alarm:hrms-db-low-storage",
+          "arn:aws:cloudwatch:us-east-1:ACCT:alarm:hrms-ec2-disk-high"
+        ]
+      }
+    }
+  ]
+}

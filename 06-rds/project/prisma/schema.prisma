@@ -1,0 +1,118 @@
+// HRMS Prisma schema — mirrors project/schema.sql
+// Generate the client with: npx prisma generate
+// (Or run `npx prisma db pull` to regenerate this from the live RDS database.)
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL_PRIMARY")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Department {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique @db.VarChar(100)
+  location  String?    @db.VarChar(100)
+  createdAt DateTime   @default(now()) @map("created_at")
+  employees Employee[]
+
+  @@map("departments")
+}
+
+model Employee {
+  id          Int             @id @default(autoincrement())
+  empCode     String          @unique @map("emp_code") @db.VarChar(20)
+  firstName   String          @map("first_name") @db.VarChar(60)
+  lastName    String          @map("last_name") @db.VarChar(60)
+  email       String          @unique @db.VarChar(160)
+  phone       String?         @db.VarChar(30)
+  deptId      Int             @map("dept_id")
+  designation String?         @db.VarChar(80)
+  hireDate    DateTime        @map("hire_date") @db.Date
+  status      EmployeeStatus  @default(active)
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  department  Department      @relation(fields: [deptId], references: [id])
+  attendance  Attendance[]
+  leaves      LeaveRequest[]
+  payroll     Payroll[]
+
+  @@index([deptId])
+  @@index([status])
+  @@index([lastName, firstName])
+  @@map("employees")
+}
+
+enum EmployeeStatus {
+  active
+  on_leave
+  terminated
+}
+
+model Attendance {
+  id         BigInt           @id @default(autoincrement())
+  employeeId Int              @map("employee_id")
+  workDate   DateTime         @map("work_date") @db.Date
+  checkIn    DateTime?        @map("check_in")
+  checkOut   DateTime?        @map("check_out")
+  status     AttendanceStatus @default(present)
+  employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, workDate])
+  @@index([workDate])
+  @@map("attendance")
+}
+
+enum AttendanceStatus {
+  present
+  absent
+  half_day
+  wfh
+}
+
+model LeaveRequest {
+  id         BigInt      @id @default(autoincrement())
+  employeeId Int         @map("employee_id")
+  leaveType  LeaveType   @map("leave_type")
+  startDate  DateTime    @map("start_date") @db.Date
+  endDate    DateTime    @map("end_date") @db.Date
+  reason     String?     @db.VarChar(255)
+  status     LeaveStatus @default(pending)
+  createdAt  DateTime    @default(now()) @map("created_at")
+  employee   Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId, status])
+  @@map("leave_requests")
+}
+
+enum LeaveType {
+  casual
+  sick
+  earned
+  unpaid
+}
+
+enum LeaveStatus {
+  pending
+  approved
+  rejected
+}
+
+model Payroll {
+  id         BigInt    @id @default(autoincrement())
+  employeeId Int       @map("employee_id")
+  payPeriod  String    @map("pay_period") @db.Char(7)
+  basic      Decimal   @db.Decimal(12, 2)
+  allowances Decimal   @default(0) @db.Decimal(12, 2)
+  deductions Decimal   @default(0) @db.Decimal(12, 2)
+  netPay     Decimal   @map("net_pay") @db.Decimal(12, 2)
+  paidOn     DateTime? @map("paid_on") @db.Date
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, payPeriod])
+  @@index([payPeriod])
+  @@map("payroll")
+}

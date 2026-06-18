@@ -1,0 +1,104 @@
+name: React CI/CD — Build & Deploy to S3 + CloudFront
+
+# ──────────────────────────────────────────────────────────────
+# Pipeline: lint → test → build → deploy (S3) → invalidate (CloudFront)
+# Auth: GitHub OIDC → IAM role (no static AWS keys)
+# ──────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Required for OIDC federation with AWS
+permissions:
+  id-token: write   # request the OIDC JWT
+  contents: read    # checkout
+
+env:
+  AWS_REGION: ap-south-1
+  NODE_VERSION: '20'
+  S3_BUCKET: my-react-app-prod
+  CLOUDFRONT_DISTRIBUTION_ID: E123EXAMPLE456
+
+concurrency:
+  group: react-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── CI: runs on every push AND pull request ──────────────────
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies (clean, reproducible)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Unit tests
+        run: npm test -- --watchAll=false --coverage
+
+      - name: Build production bundle
+        run: npm run build
+        env:
+          CI: false   # treat warnings as warnings, not errors
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-build
+          path: build/   # use 'dist/' for Vite
+          retention-days: 5
+
+  # ── CD: only on push to main (not on PRs) ────────────────────
+  deploy:
+    name: Deploy to S3 + CloudFront
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://app.example.com
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: react-build
+          path: build/
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-react-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync hashed assets (long cache, immutable)
+        run: |
+          aws s3 sync build/ s3://${{ env.S3_BUCKET }} \
+            --delete \
+            --cache-control "public,max-age=31536000,immutable" \
+            --exclude "index.html" --exclude "*.json"
+
+      - name: Upload index.html (no-cache so users get new app)
+        run: |
+          aws s3 cp build/index.html s3://${{ env.S3_BUCKET }}/index.html \
+            --cache-control "no-cache,no-store,must-revalidate"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"

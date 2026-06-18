@@ -1,0 +1,117 @@
+{
+  "pipeline": {
+    "name": "my-app-pipeline",
+    "roleArn": "arn:aws:iam::123456789012:role/codepipeline-service-role",
+    "artifactStore": {
+      "type": "S3",
+      "location": "my-app-pipeline-artifacts"
+    },
+    "stages": [
+      {
+        "name": "Source",
+        "actions": [
+          {
+            "name": "GitHub_Source",
+            "actionTypeId": {
+              "category": "Source",
+              "owner": "AWS",
+              "provider": "CodeStarSourceConnection",
+              "version": "1"
+            },
+            "configuration": {
+              "ConnectionArn": "arn:aws:codestar-connections:ap-south-1:123456789012:connection/EXAMPLE",
+              "FullRepositoryId": "my-org/my-app",
+              "BranchName": "main",
+              "OutputArtifactFormat": "CODE_ZIP"
+            },
+            "outputArtifacts": [{ "name": "SourceOutput" }],
+            "runOrder": 1
+          }
+        ]
+      },
+      {
+        "name": "Build",
+        "actions": [
+          {
+            "name": "CodeBuild",
+            "actionTypeId": {
+              "category": "Build",
+              "owner": "AWS",
+              "provider": "CodeBuild",
+              "version": "1"
+            },
+            "configuration": { "ProjectName": "my-app-build" },
+            "inputArtifacts": [{ "name": "SourceOutput" }],
+            "outputArtifacts": [{ "name": "BuildOutput" }],
+            "runOrder": 1
+          }
+        ]
+      },
+      {
+        "name": "DeployStaging",
+        "actions": [
+          {
+            "name": "Deploy_ECS_Staging",
+            "actionTypeId": {
+              "category": "Deploy",
+              "owner": "AWS",
+              "provider": "ECS",
+              "version": "1"
+            },
+            "configuration": {
+              "ClusterName": "staging-cluster",
+              "ServiceName": "my-app-svc",
+              "FileName": "imagedefinitions.json"
+            },
+            "inputArtifacts": [{ "name": "BuildOutput" }],
+            "runOrder": 1
+          }
+        ]
+      },
+      {
+        "name": "Approval",
+        "actions": [
+          {
+            "name": "ManualApproval",
+            "actionTypeId": {
+              "category": "Approval",
+              "owner": "AWS",
+              "provider": "Manual",
+              "version": "1"
+            },
+            "configuration": {
+              "NotificationArn": "arn:aws:sns:ap-south-1:123456789012:deploy-approvals",
+              "CustomData": "Approve production deployment after verifying staging."
+            },
+            "runOrder": 1
+          }
+        ]
+      },
+      {
+        "name": "DeployProduction",
+        "actions": [
+          {
+            "name": "Deploy_ECS_BlueGreen",
+            "actionTypeId": {
+              "category": "Deploy",
+              "owner": "AWS",
+              "provider": "CodeDeployToECS",
+              "version": "1"
+            },
+            "configuration": {
+              "ApplicationName": "my-app",
+              "DeploymentGroupName": "my-app-bg",
+              "TaskDefinitionTemplateArtifact": "BuildOutput",
+              "TaskDefinitionTemplatePath": "taskdef.json",
+              "AppSpecTemplateArtifact": "BuildOutput",
+              "AppSpecTemplatePath": "appspec.yaml"
+            },
+            "inputArtifacts": [{ "name": "BuildOutput" }],
+            "runOrder": 1
+          }
+        ]
+      }
+    ],
+    "version": 1
+  }
+}

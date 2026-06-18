@@ -1,0 +1,910 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "HRMS Enterprise Stack — Phase 13 Capstone (CloudFormation alternative to Terraform)"
+
+###############################################################################
+# Parameters
+###############################################################################
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [prod, staging, dev]
+    Description: Deployment environment
+
+  VpcCidr:
+    Type: String
+    Default: "10.0.0.0/16"
+
+  DomainName:
+    Type: String
+    Description: Primary domain name (e.g. hrms.example.com)
+
+  AcmCertificateArn:
+    Type: String
+    Description: ACM certificate ARN (must be in us-east-1 for CloudFront)
+    AllowedPattern: "arn:aws:acm:us-east-1:.*"
+
+  EcrImageUri:
+    Type: String
+    Description: Full ECR image URI for the HRMS API container
+
+  DbInstanceClass:
+    Type: String
+    Default: db.r7g.large
+    AllowedValues: [db.t3.medium, db.r7g.large, db.r7g.xlarge, db.r7g.2xlarge]
+
+  RedisNodeType:
+    Type: String
+    Default: cache.r7g.large
+
+  WafRateLimit:
+    Type: Number
+    Default: 1000
+    Description: Max requests per IP per 5-minute WAF rate-limit window
+
+###############################################################################
+# Conditions
+###############################################################################
+Conditions:
+  IsProd: !Equals [!Ref Environment, prod]
+
+###############################################################################
+# Resources
+###############################################################################
+Resources:
+
+  # ─── KMS Keys ─────────────────────────────────────────────────────────────
+
+  RdsKmsKey:
+    Type: AWS::KMS::Key
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: !Sub "hrms-${Environment} Aurora encryption key"
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowRootAdmin
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+          - Sid: AllowRDSService
+            Effect: Allow
+            Principal:
+              Service: rds.amazonaws.com
+            Action: [kms:Decrypt, kms:GenerateDataKey, kms:DescribeKey]
+            Resource: "*"
+
+  RdsKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/hrms-${Environment}-rds"
+      TargetKeyId: !Ref RdsKmsKey
+
+  S3KmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Sub "hrms-${Environment} S3 encryption key"
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+
+  SqsKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Sub "hrms-${Environment} SQS encryption key"
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action: [kms:Decrypt, kms:GenerateDataKey]
+            Resource: "*"
+
+  # ─── VPC ──────────────────────────────────────────────────────────────────
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub "hrms-${Environment}"
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [0, !Cidr [!Ref VpcCidr, 9, 8]]
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags: [{ Key: Name, Value: !Sub "hrms-${Environment}-public-1" }]
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [1, !Cidr [!Ref VpcCidr, 9, 8]]
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags: [{ Key: Name, Value: !Sub "hrms-${Environment}-public-2" }]
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [3, !Cidr [!Ref VpcCidr, 9, 8]]
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags: [{ Key: Name, Value: !Sub "hrms-${Environment}-private-1" }]
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [4, !Cidr [!Ref VpcCidr, 9, 8]]
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags: [{ Key: Name, Value: !Sub "hrms-${Environment}-private-2" }]
+
+  DataSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [6, !Cidr [!Ref VpcCidr, 9, 8]]
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags: [{ Key: Name, Value: !Sub "hrms-${Environment}-data-1" }]
+
+  DataSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [7, !Cidr [!Ref VpcCidr, 9, 8]]
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags: [{ Key: Name, Value: !Sub "hrms-${Environment}-data-2" }]
+
+  NatEIP1:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  NatGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatEIP1.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref NatGateway1
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+
+  # ─── Security Groups ──────────────────────────────────────────────────────
+
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ALB — HTTPS from internet
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: "0.0.0.0/0"
+          Description: HTTPS from internet (tighten to CF IP ranges in prod)
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: "0.0.0.0/0"
+
+  EcsApiSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ECS API tasks — ALB only
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          SourceSecurityGroupId: !Ref AlbSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: "0.0.0.0/0"
+
+  AuroraSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Aurora MySQL — ECS tasks only
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref EcsApiSecurityGroup
+          Description: MySQL from ECS API tasks
+
+  ElastiCacheSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ElastiCache Redis — ECS tasks only
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref EcsApiSecurityGroup
+          Description: Redis from ECS API tasks
+
+  # ─── S3 Static Assets ─────────────────────────────────────────────────────
+
+  StaticAssetsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "hrms-${Environment}-static-${AWS::AccountId}"
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !Ref S3KmsKey
+            BucketKeyEnabled: true
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # OAC bucket policy (allows CloudFront to read)
+  StaticAssetsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticAssetsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${StaticAssetsBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
+  # ─── SQS ──────────────────────────────────────────────────────────────────
+
+  PayrollDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "hrms-${Environment}-payroll-dlq"
+      KmsMasterKeyId: !Ref SqsKmsKey
+      MessageRetentionPeriod: 1209600
+
+  PayrollQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "hrms-${Environment}-payroll"
+      KmsMasterKeyId: !Ref SqsKmsKey
+      VisibilityTimeout: 300
+      MessageRetentionPeriod: 345600
+      ReceiveMessageWaitTimeSeconds: 20
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PayrollDLQ.Arn
+        maxReceiveCount: 3
+
+  NotificationsDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "hrms-${Environment}-notifications-dlq"
+      KmsMasterKeyId: !Ref SqsKmsKey
+      MessageRetentionPeriod: 1209600
+
+  NotificationsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "hrms-${Environment}-notifications"
+      KmsMasterKeyId: !Ref SqsKmsKey
+      VisibilityTimeout: 300
+      ReceiveMessageWaitTimeSeconds: 20
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt NotificationsDLQ.Arn
+        maxReceiveCount: 3
+
+  # ─── SNS ──────────────────────────────────────────────────────────────────
+
+  HrmsEventsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "hrms-${Environment}-events"
+      KmsMasterKeyId: !Ref SqsKmsKey
+
+  NotificationsSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref HrmsEventsTopic
+      Protocol: sqs
+      Endpoint: !GetAtt NotificationsQueue.Arn
+      FilterPolicy:
+        event_type: [email, sms, push]
+
+  # Allow SNS to send to SQS
+  NotificationsQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues: [!Ref NotificationsQueue]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt NotificationsQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref HrmsEventsTopic
+
+  # ─── Aurora MySQL ──────────────────────────────────────────────────────────
+
+  AuroraSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Aurora subnet group
+      SubnetIds:
+        - !Ref DataSubnet1
+        - !Ref DataSubnet2
+
+  AuroraCluster:
+    Type: AWS::RDS::DBCluster
+    DeletionPolicy: !If [IsProd, Snapshot, Delete]
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBClusterIdentifier: !Sub "hrms-${Environment}"
+      Engine: aurora-mysql
+      EngineVersion: "8.0.mysql_aurora.3.05.2"
+      DatabaseName: hrms
+      MasterUsername: hrms_admin
+      ManageMasterUserPassword: true
+      MasterUserSecret:
+        KmsKeyId: !Ref RdsKmsKey
+      DBSubnetGroupName: !Ref AuroraSubnetGroup
+      VpcSecurityGroupIds: [!Ref AuroraSecurityGroup]
+      StorageEncrypted: true
+      KmsKeyId: !Ref RdsKmsKey
+      BackupRetentionPeriod: !If [IsProd, 35, 7]
+      PreferredBackupWindow: "03:00-04:00"
+      DeletionProtection: !If [IsProd, true, false]
+      EnableCloudwatchLogsExports: [audit, error, general, slowquery]
+
+  AuroraWriter:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref AuroraCluster
+      DBInstanceIdentifier: !Sub "hrms-${Environment}-writer"
+      DBInstanceClass: !Ref DbInstanceClass
+      Engine: aurora-mysql
+      EnablePerformanceInsights: true
+      PerformanceInsightsRetentionPeriod: 7
+      MonitoringInterval: 60
+      MonitoringRoleArn: !GetAtt EnhancedMonitoringRole.Arn
+
+  AuroraReader:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref AuroraCluster
+      DBInstanceIdentifier: !Sub "hrms-${Environment}-reader"
+      DBInstanceClass: !Ref DbInstanceClass
+      Engine: aurora-mysql
+      EnablePerformanceInsights: true
+      PerformanceInsightsRetentionPeriod: 7
+      MonitoringInterval: 60
+      MonitoringRoleArn: !GetAtt EnhancedMonitoringRole.Arn
+
+  EnhancedMonitoringRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: monitoring.rds.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+
+  # ─── ElastiCache Redis ─────────────────────────────────────────────────────
+
+  RedisSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: Redis subnet group
+      SubnetIds:
+        - !Ref DataSubnet1
+        - !Ref DataSubnet2
+
+  RedisParameterGroup:
+    Type: AWS::ElastiCache::ParameterGroup
+    Properties:
+      CacheParameterGroupFamily: redis7.x
+      Description: HRMS Redis parameters
+      Properties:
+        maxmemory-policy: allkeys-lru
+        lazyfree-lazy-expire: "yes"
+
+  RedisCluster:
+    Type: AWS::ElastiCache::ReplicationGroup
+    Properties:
+      ReplicationGroupDescription: !Sub "hrms-${Environment} Redis cluster"
+      ReplicationGroupId: !Sub "hrms-${Environment}"
+      NumNodeGroups: 3
+      ReplicasPerNodeGroup: 1
+      CacheNodeType: !Ref RedisNodeType
+      Engine: redis
+      EngineVersion: "7.1"
+      AutomaticFailoverEnabled: true
+      MultiAZEnabled: true
+      AtRestEncryptionEnabled: true
+      TransitEncryptionEnabled: true
+      CacheSubnetGroupName: !Ref RedisSubnetGroup
+      SecurityGroupIds: [!Ref ElastiCacheSecurityGroup]
+      CacheParameterGroupName: !Ref RedisParameterGroup
+      SnapshotRetentionLimit: 7
+      SnapshotWindow: "05:00-06:00"
+
+  # ─── ECS ──────────────────────────────────────────────────────────────────
+
+  EcsCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "hrms-${Environment}"
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+
+  EcsApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/hrms/${Environment}/ecs/api"
+      RetentionInDays: 90
+
+  EcsTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "hrms-${Environment}-ecs-task"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: hrms-task-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [sqs:SendMessage, sqs:ReceiveMessage, sqs:DeleteMessage, sqs:GetQueueAttributes]
+                Resource:
+                  - !GetAtt PayrollQueue.Arn
+                  - !GetAtt NotificationsQueue.Arn
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: !Ref HrmsEventsTopic
+              - Effect: Allow
+                Action: cloudwatch:PutMetricData
+                Resource: "*"
+
+  EcsExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "hrms-${Environment}-ecs-execution"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  EcsTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "hrms-${Environment}-api"
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: "1024"
+      Memory: "2048"
+      TaskRoleArn: !GetAtt EcsTaskRole.Arn
+      ExecutionRoleArn: !GetAtt EcsExecutionRole.Arn
+      ContainerDefinitions:
+        - Name: hrms-api
+          Image: !Ref EcrImageUri
+          PortMappings:
+            - ContainerPort: 3000
+              Protocol: tcp
+          Environment:
+            - Name: NODE_ENV
+              Value: !Ref Environment
+            - Name: SQS_PAYROLL_URL
+              Value: !Ref PayrollQueue
+          Secrets:
+            - Name: DB_SECRET_ARN
+              ValueFrom: !GetAtt AuroraCluster.MasterUserSecret.SecretArn
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref EcsApiLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: api
+          HealthCheck:
+            Command: [CMD-SHELL, "curl -f http://localhost:3000/health || exit 1"]
+            Interval: 10
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 30
+
+  # ─── ALB ──────────────────────────────────────────────────────────────────
+
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub "hrms-${Environment}"
+      Scheme: internet-facing
+      Type: application
+      SecurityGroups: [!Ref AlbSecurityGroup]
+      Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
+      LoadBalancerAttributes:
+        - Key: deletion_protection.enabled
+          Value: !If [IsProd, "true", "false"]
+
+  AlbTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub "hrms-${Environment}-api"
+      Port: 3000
+      Protocol: HTTP
+      VpcId: !Ref VPC
+      TargetType: ip
+      HealthCheckPath: /health
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      HealthCheckIntervalSeconds: 10
+      HealthCheckTimeoutSeconds: 5
+
+  AlbListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+      Certificates:
+        - CertificateArn: !Ref AcmCertificateArn
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref AlbTargetGroup
+
+  EcsService:
+    Type: AWS::ECS::Service
+    DependsOn: AlbListener
+    Properties:
+      ServiceName: !Sub "hrms-${Environment}-api"
+      Cluster: !Ref EcsCluster
+      TaskDefinition: !Ref EcsTaskDefinition
+      DesiredCount: 2
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets: [!Ref PrivateSubnet1, !Ref PrivateSubnet2]
+          SecurityGroups: [!Ref EcsApiSecurityGroup]
+      LoadBalancers:
+        - ContainerName: hrms-api
+          ContainerPort: 3000
+          TargetGroupArn: !Ref AlbTargetGroup
+      DeploymentConfiguration:
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+
+  # ─── CloudWatch Alarms ────────────────────────────────────────────────────
+
+  Api5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "hrms-${Environment}-api-5xx-high"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 2
+      Threshold: 5
+      TreatMissingData: notBreaching
+      AlarmDescription: API 5xx error rate > 5%
+      Metrics:
+        - Id: e1
+          Expression: "m2/m1*100"
+          Label: "5xx Error Rate %"
+          ReturnData: true
+        - Id: m1
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApplicationELB
+              MetricName: RequestCount
+              Dimensions:
+                - Name: LoadBalancer
+                  Value: !GetAtt ApplicationLoadBalancer.LoadBalancerFullName
+            Period: 60
+            Stat: Sum
+          ReturnData: false
+        - Id: m2
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApplicationELB
+              MetricName: HTTPCode_Target_5XX_Count
+              Dimensions:
+                - Name: LoadBalancer
+                  Value: !GetAtt ApplicationLoadBalancer.LoadBalancerFullName
+            Period: 60
+            Stat: Sum
+          ReturnData: false
+
+  PayrollQueueAgeAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "hrms-${Environment}-payroll-queue-age"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 2
+      Threshold: 300
+      Namespace: AWS/SQS
+      MetricName: ApproximateAgeOfOldestMessage
+      Period: 60
+      Statistic: Maximum
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt PayrollQueue.QueueName
+
+  # ─── CloudFront ───────────────────────────────────────────────────────────
+
+  CloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "hrms-${Environment}-s3-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    DependsOn: StaticAssetsBucket
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Aliases: [!Ref DomainName]
+        WebACLId: !Ref WafWebAcl
+
+        Origins:
+          - Id: s3-static
+            DomainName: !GetAtt StaticAssetsBucket.RegionalDomainName
+            OriginAccessControlId: !Ref CloudFrontOAC
+            S3OriginConfig: {}
+          - Id: alb-api
+            DomainName: !GetAtt ApplicationLoadBalancer.DNSName
+            CustomOriginConfig:
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols: [TLSv1.2]
+
+        CacheBehaviors:
+          - PathPattern: "/static/*"
+            TargetOriginId: s3-static
+            ViewerProtocolPolicy: redirect-to-https
+            CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6"  # CachingOptimized
+            Compress: true
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+
+          - PathPattern: "/api/*"
+            TargetOriginId: alb-api
+            ViewerProtocolPolicy: redirect-to-https
+            CachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"  # CachingDisabled
+            OriginRequestPolicyId: "b689b0a8-53d0-40ab-baf2-68738e2966ac"  # AllViewerExceptHostHeader
+            AllowedMethods: [DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT]
+            CachedMethods: [GET, HEAD]
+
+        DefaultCacheBehavior:
+          TargetOriginId: s3-static
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+          Compress: true
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
+
+        ViewerCertificate:
+          AcmCertificateArn: !Ref AcmCertificateArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+
+        HttpVersion: http2and3
+        IPV6Enabled: true
+
+        Restrictions:
+          GeoRestriction:
+            RestrictionType: none
+
+  # ─── WAF Web ACL (CLOUDFRONT scope — deploy via us-east-1 stack or macro) ─
+  # NOTE: CloudFront-scoped WAF must be in us-east-1.
+  # In a multi-region setup, deploy this nested stack with a TemplateURL pointing to
+  # a stack in us-east-1, or deploy the WAF stack separately first and pass the ARN.
+
+  WafWebAcl:
+    Type: AWS::WAFv2::WebACL
+    # Deploy this only when the stack is in us-east-1
+    Properties:
+      Name: !Sub "hrms-${Environment}-waf"
+      Scope: CLOUDFRONT
+      DefaultAction:
+        Allow: {}
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: !Sub "hrms-${Environment}-waf"
+      Rules:
+        - Name: common-rules
+          Priority: 10
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              Name: AWSManagedRulesCommonRuleSet
+              VendorName: AWS
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: hrms-common-rules
+
+        - Name: sqli-rules
+          Priority: 20
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              Name: AWSManagedRulesSQLiRuleSet
+              VendorName: AWS
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: hrms-sqli-rules
+
+        - Name: rate-limit
+          Priority: 30
+          Action:
+            Block: {}
+          Statement:
+            RateBasedStatement:
+              Limit: !Ref WafRateLimit
+              AggregateKeyType: IP
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: hrms-rate-limit
+
+###############################################################################
+# Outputs
+###############################################################################
+Outputs:
+  CloudFrontDomain:
+    Description: CloudFront distribution domain — use as CNAME for your domain
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub "${AWS::StackName}-CloudFrontDomain"
+
+  AlbDnsName:
+    Description: ALB DNS name (accessed through CloudFront in production)
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+    Export:
+      Name: !Sub "${AWS::StackName}-AlbDnsName"
+
+  AuroraClusterEndpoint:
+    Description: Aurora cluster write endpoint
+    Value: !GetAtt AuroraCluster.Endpoint.Address
+    Export:
+      Name: !Sub "${AWS::StackName}-AuroraEndpoint"
+
+  PayrollQueueUrl:
+    Description: Payroll SQS queue URL
+    Value: !Ref PayrollQueue
+    Export:
+      Name: !Sub "${AWS::StackName}-PayrollQueueUrl"
+
+  HrmsEventsTopicArn:
+    Description: HRMS events SNS topic ARN
+    Value: !Ref HrmsEventsTopic
+    Export:
+      Name: !Sub "${AWS::StackName}-HrmsEventsTopicArn"
+
+  VpcId:
+    Description: VPC ID
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "${AWS::StackName}-VpcId"

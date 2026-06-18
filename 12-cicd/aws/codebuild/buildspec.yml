@@ -1,0 +1,69 @@
+version: 0.2
+
+# ──────────────────────────────────────────────────────────────
+# AWS CodeBuild buildspec — builds a Docker image, runs tests,
+# pushes to ECR, and produces the imagedefinitions.json artifact
+# that CodePipeline hands to the ECS/CodeDeploy stage.
+# ──────────────────────────────────────────────────────────────
+
+env:
+  variables:
+    AWS_REGION: ap-south-1
+    ECR_REPOSITORY: my-app
+  # Pull sensitive values from SSM Parameter Store (never hardcode)
+  parameter-store:
+    DOCKERHUB_USER: /cicd/dockerhub/user
+  secrets-manager:
+    DOCKERHUB_TOKEN: dockerhub-creds:token
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing dependencies..."
+      - npm ci
+
+  pre_build:
+    commands:
+      - echo "Running lint and tests..."
+      - npm run lint --if-present
+      - npm test
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - REPO_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY
+      - IMAGE_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION:0:8}
+
+  build:
+    commands:
+      - echo "Building Docker image..."
+      - docker build -t $REPO_URI:$IMAGE_TAG -t $REPO_URI:latest .
+
+  post_build:
+    commands:
+      - echo "Pushing image to ECR..."
+      - docker push $REPO_URI:$IMAGE_TAG
+      - docker push $REPO_URI:latest
+      # imagedefinitions.json → consumed by CodePipeline ECS deploy action
+      - printf '[{"name":"app","imageUri":"%s"}]' "$REPO_URI:$IMAGE_TAG" > imagedefinitions.json
+      # taskdef + appspec for Blue/Green CodeDeploy
+      - sed "s|<IMAGE>|$REPO_URI:$IMAGE_TAG|g" aws/ecs/task-definition.json > taskdef.json
+      - cp aws/codedeploy/appspec-ecs.yml appspec.yaml
+
+reports:
+  unit-tests:
+    files:
+      - 'junit.xml'
+    file-format: JUNITXML
+
+cache:
+  paths:
+    - 'node_modules/**/*'
+    - '/root/.npm/**/*'
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - taskdef.json
+    - appspec.yaml
+  discard-paths: yes

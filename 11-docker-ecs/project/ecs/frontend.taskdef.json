@@ -1,0 +1,30 @@
+{
+  "family": "hrms-frontend",
+  "requiresCompatibilities": ["FARGATE"],
+  "networkMode": "awsvpc",
+  "cpu": "256",
+  "memory": "512",
+  "runtimePlatform": { "cpuArchitecture": "X86_64", "operatingSystemFamily": "LINUX" },
+  "executionRoleArn": "${EXEC_ROLE_ARN}",
+  "taskRoleArn": "${TASK_ROLE_ARN}",
+  "containerDefinitions": [
+    {
+      "name": "frontend",
+      "image": "${REGISTRY}/hrms-frontend:${IMAGE_TAG}",
+      "essential": true,
+      "portMappings": [ { "containerPort": 80, "protocol": "tcp" } ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/hrms-frontend",
+          "awslogs-region": "${REGION}",
+          "awslogs-stream-prefix": "frontend"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost/ || exit 1"],
+        "interval": 30, "timeout": 5, "retries": 3, "startPeriod": 15
+      }
+    }
+  ]
+}

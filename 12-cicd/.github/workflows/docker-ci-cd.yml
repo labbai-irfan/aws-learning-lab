@@ -1,0 +1,108 @@
+name: Docker CI/CD — Build, Push to ECR & Deploy to ECS (Blue/Green)
+
+# ──────────────────────────────────────────────────────────────
+# Pipeline: build image → scan → push to ECR → render task def →
+#           deploy to ECS via CodeDeploy Blue/Green
+# ──────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: my-docker-app
+  ECS_CLUSTER: production-cluster
+  ECS_SERVICE: my-docker-app-svc
+  CONTAINER_NAME: app
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, Scan & Push Image
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-ecr-push
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push image (with layer cache)
+        id: build-image
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          TAG: ${{ github.sha }}
+        run: |
+          IMAGE="$REGISTRY/${{ env.ECR_REPOSITORY }}:$TAG"
+          docker buildx build \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            -t "$IMAGE" \
+            -t "$REGISTRY/${{ env.ECR_REPOSITORY }}:latest" \
+            --push .
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Scan image for vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.build-image.outputs.image }}
+          format: table
+          exit-code: '0'            # set to '1' to fail the build on findings
+          severity: CRITICAL,HIGH
+
+  deploy:
+    name: Deploy to ECS (Blue/Green)
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-ecs-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Render new task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: aws/ecs/task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ needs.build.outputs.image }}
+
+      - name: Deploy via CodeDeploy Blue/Green
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+          codedeploy-appspec: aws/codedeploy/appspec-ecs.yml
+          codedeploy-application: my-docker-app
+          codedeploy-deployment-group: my-docker-app-bg

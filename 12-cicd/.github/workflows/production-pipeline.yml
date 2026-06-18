@@ -1,0 +1,130 @@
+name: Production Deployment Pipeline (dev → staging → prod)
+
+# ──────────────────────────────────────────────────────────────
+# Full promotion pipeline with environment protection + approvals.
+#   1. CI (test, build, scan)
+#   2. Deploy to DEV     (automatic)
+#   3. Deploy to STAGING (automatic, smoke tests)
+#   4. Deploy to PROD    (manual approval via GitHub Environment)
+#   5. Auto-rollback on health check failure
+# ──────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      skip_staging:
+        description: 'Skip staging (hotfix path)'
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: my-app
+
+concurrency:
+  group: prod-pipeline
+  cancel-in-progress: false   # never cancel a prod deploy mid-flight
+
+jobs:
+  # ── 1. CI ────────────────────────────────────────────────────
+  ci:
+    name: CI — Test, Build, Scan
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - run: npm run lint --if-present
+      - run: npm test
+      - name: Compute image tag
+        id: meta
+        run: echo "tag=${GITHUB_SHA::8}-$(date +%s)" >> "$GITHUB_OUTPUT"
+
+  # ── 2. Deploy to DEV ─────────────────────────────────────────
+  deploy-dev:
+    name: Deploy → DEV
+    needs: ci
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+      url: https://dev.example.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::111111111111:role/deploy-dev
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Deploy
+        run: ./aws/scripts/deploy.sh dev ${{ needs.ci.outputs.image_tag }}
+      - name: Smoke test
+        run: ./aws/scripts/smoke-test.sh https://dev.example.com
+
+  # ── 3. Deploy to STAGING ─────────────────────────────────────
+  deploy-staging:
+    name: Deploy → STAGING
+    needs: [ci, deploy-dev]
+    if: ${{ !inputs.skip_staging }}
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.example.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::222222222222:role/deploy-staging
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Deploy
+        run: ./aws/scripts/deploy.sh staging ${{ needs.ci.outputs.image_tag }}
+      - name: Integration + smoke tests
+        run: ./aws/scripts/smoke-test.sh https://staging.example.com
+
+  # ── 4. Deploy to PROD (manual approval) ──────────────────────
+  deploy-prod:
+    name: Deploy → PROD 🔒
+    needs: [ci, deploy-staging]
+    # 'always()' lets the hotfix path (skip_staging) still reach prod
+    if: ${{ always() && needs.ci.result == 'success' && (needs.deploy-staging.result == 'success' || inputs.skip_staging) }}
+    runs-on: ubuntu-latest
+    environment:
+      name: production          # ← configure required reviewers in GitHub UI
+      url: https://www.example.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::333333333333:role/deploy-prod
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Canary deploy (10% → 100%)
+        id: deploy
+        run: ./aws/scripts/deploy.sh prod ${{ needs.ci.outputs.image_tag }} --canary
+
+      - name: Verify production health
+        id: health
+        run: ./aws/scripts/health-check.sh https://www.example.com
+
+      - name: Rollback on failure
+        if: failure() && steps.deploy.outcome == 'success'
+        run: ./aws/scripts/rollback.sh prod
+
+  # ── 5. Notify ────────────────────────────────────────────────
+  notify:
+    name: Notify result
+    needs: [deploy-prod]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report status
+        run: |
+          echo "Pipeline finished with status: ${{ needs.deploy-prod.result }}"
+          # Hook Slack/Teams webhook here using a secret.

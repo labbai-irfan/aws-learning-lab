@@ -1,0 +1,56 @@
+# Run the entire HRMS locally before touching AWS (Step 1 of the capstone).
+# Compose creates one network; services reach each other by name (Module 5).
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: hrms
+      MYSQL_USER: hrmsadmin
+      MYSQL_PASSWORD: localpass
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  auth:
+    build: ./auth-service
+    environment:
+      PORT: 5000
+      JWT_SECRET: local-dev-secret
+    depends_on: [ db ]
+
+  employee:
+    build: ./employee-service
+    environment:
+      PORT: 5000
+      DB_HOST: db
+      DB_USER: hrmsadmin
+      DB_PASSWORD: localpass
+      DB_NAME: hrms
+    depends_on:
+      db: { condition: service_healthy }
+
+  payroll:
+    build: ./payroll-service
+    environment:
+      PORT: 5000
+      DB_HOST: db
+      DB_USER: hrmsadmin
+      DB_PASSWORD: localpass
+      DB_NAME: hrms
+    depends_on:
+      db: { condition: service_healthy }
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"          # open http://localhost:8080
+    depends_on: [ auth, employee, payroll ]
+
+volumes:
+  dbdata:

@@ -1,0 +1,37 @@
+{
+  "family": "hrms-auth",
+  "requiresCompatibilities": ["FARGATE"],
+  "networkMode": "awsvpc",
+  "cpu": "256",
+  "memory": "512",
+  "runtimePlatform": { "cpuArchitecture": "X86_64", "operatingSystemFamily": "LINUX" },
+  "executionRoleArn": "${EXEC_ROLE_ARN}",
+  "taskRoleArn": "${TASK_ROLE_ARN}",
+  "containerDefinitions": [
+    {
+      "name": "auth",
+      "image": "${REGISTRY}/hrms-auth:${IMAGE_TAG}",
+      "essential": true,
+      "portMappings": [ { "containerPort": 5000, "protocol": "tcp" } ],
+      "environment": [
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "PORT", "value": "5000" }
+      ],
+      "secrets": [
+        { "name": "JWT_SECRET", "valueFrom": "${DB_SECRET_ARN}:password::" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/hrms-auth",
+          "awslogs-region": "${REGION}",
+          "awslogs-stream-prefix": "auth"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"],
+        "interval": 30, "timeout": 5, "retries": 3, "startPeriod": 30
+      }
+    }
+  ]
+}

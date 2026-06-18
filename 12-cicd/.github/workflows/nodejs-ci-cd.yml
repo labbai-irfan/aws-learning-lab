@@ -1,0 +1,115 @@
+name: Node.js CI/CD — Test & Deploy to EC2 via CodeDeploy
+
+# ──────────────────────────────────────────────────────────────
+# Pipeline: matrix test → package → upload to S3 → trigger CodeDeploy
+# Target: EC2 fleet behind an ALB, in-place (rolling) deployment
+# ──────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  ARTIFACT_BUCKET: my-node-app-artifacts
+  CODEDEPLOY_APP: my-node-app
+  CODEDEPLOY_GROUP: production-fleet
+
+concurrency:
+  group: node-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18', '20', '22']
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: appdb
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint --if-present
+      - name: Run tests
+        run: npm test
+        env:
+          DATABASE_URL: postgres://postgres:test@localhost:5432/appdb
+      - name: Audit dependencies
+        run: npm audit --audit-level=high || true
+
+  package-and-deploy:
+    name: Package & Deploy (CodeDeploy)
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install production deps only
+        run: npm ci --omit=dev
+
+      - name: Create deployment bundle
+        run: |
+          # Bundle = app code + node_modules + appspec.yml + hook scripts
+          zip -r app-bundle.zip . \
+            -x "*.git*" "tests/*" "*.github*"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-node-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload bundle to S3
+        id: upload
+        run: |
+          KEY="builds/${{ github.sha }}.zip"
+          aws s3 cp app-bundle.zip s3://${{ env.ARTIFACT_BUCKET }}/$KEY
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
+
+      - name: Create CodeDeploy deployment
+        id: deploy
+        run: |
+          ID=$(aws deploy create-deployment \
+            --application-name ${{ env.CODEDEPLOY_APP }} \
+            --deployment-group-name ${{ env.CODEDEPLOY_GROUP }} \
+            --deployment-config-name CodeDeployDefault.OneAtATime \
+            --s3-location bucket=${{ env.ARTIFACT_BUCKET }},key=${{ steps.upload.outputs.key }},bundleType=zip \
+            --description "GH Actions ${{ github.sha }}" \
+            --query deploymentId --output text)
+          echo "id=$ID" >> "$GITHUB_OUTPUT"
+          echo "Started deployment $ID"
+
+      - name: Wait for deployment to finish
+        run: |
+          aws deploy wait deployment-successful \
+            --deployment-id ${{ steps.deploy.outputs.id }}
+          echo "✅ Deployment ${{ steps.deploy.outputs.id }} succeeded"

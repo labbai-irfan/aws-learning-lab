@@ -1,0 +1,14 @@
+{
+  "name": "hrms-employee-service",
+  "version": "1.0.0",
+  "description": "HRMS employee microservice (CRUD over MySQL)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mysql2": "^3.11.0"
+  }
+}

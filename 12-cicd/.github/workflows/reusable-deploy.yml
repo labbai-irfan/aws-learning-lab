@@ -1,0 +1,59 @@
+name: Reusable Deploy Workflow
+
+# ──────────────────────────────────────────────────────────────
+# Called by other workflows via `uses: ./.github/workflows/reusable-deploy.yml`.
+# Centralizes the deploy logic so each app pipeline stays DRY.
+# ──────────────────────────────────────────────────────────────
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Target environment (dev/staging/prod)'
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+      aws_region:
+        required: false
+        type: string
+        default: ap-south-1
+    secrets:
+      role_arn:
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.role_arn }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Deploy
+        run: ./aws/scripts/deploy.sh ${{ inputs.environment }} ${{ inputs.image_tag }}
+
+      - name: Health check
+        run: ./aws/scripts/health-check.sh
+
+# ── Example caller ───────────────────────────────────────────
+# jobs:
+#   deploy-prod:
+#     uses: ./.github/workflows/reusable-deploy.yml
+#     with:
+#       environment: production
+#       image_tag: ${{ github.sha }}
+#     secrets:
+#       role_arn: ${{ secrets.PROD_DEPLOY_ROLE_ARN }}

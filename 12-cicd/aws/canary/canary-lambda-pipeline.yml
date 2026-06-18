@@ -1,0 +1,28 @@
+# ──────────────────────────────────────────────────────────────
+# CodeDeploy Canary deployment for AWS Lambda.
+# Uses an alias + two versions; traffic shifts gradually.
+# This is the appspec used by a Lambda deployment group.
+# ──────────────────────────────────────────────────────────────
+version: 0.0
+Resources:
+  - myLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        Name: my-api-handler
+        Alias: live
+        CurrentVersion: 1        # blue (current)
+        TargetVersion: 2         # green (new)
+
+Hooks:
+  # Validate the new version BEFORE any prod traffic flows.
+  - BeforeAllowTraffic: "my-api-pre-traffic-hook"
+  # Validate AFTER 100% traffic has shifted.
+  - AfterAllowTraffic: "my-api-post-traffic-hook"
+
+# ── Deployment config options (set on the deployment group) ────
+# CodeDeployDefault.LambdaCanary10Percent5Minutes
+#   → 10% for 5 min, then 100%.
+# CodeDeployDefault.LambdaLinear10PercentEvery1Minute
+#   → +10% each minute until 100%.
+# CodeDeployDefault.LambdaAllAtOnce
+#   → shift 100% immediately (no canary).

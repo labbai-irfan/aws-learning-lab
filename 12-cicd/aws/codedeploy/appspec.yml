@@ -1,0 +1,50 @@
+# ──────────────────────────────────────────────────────────────
+# CodeDeploy appspec.yml — EC2/On-Premises in-place deployment.
+# Lives at the ROOT of the deployment bundle (zip).
+# Defines where files go and which lifecycle hooks run.
+#
+# Lifecycle order (in-place):
+#   ApplicationStop → DownloadBundle → BeforeInstall → Install →
+#   AfterInstall → ApplicationStart → ValidateService
+# ──────────────────────────────────────────────────────────────
+version: 0.0
+os: linux
+
+files:
+  - source: /
+    destination: /var/www/my-node-app
+
+# Set ownership/permissions after files are copied
+permissions:
+  - object: /var/www/my-node-app
+    owner: ec2-user
+    group: ec2-user
+    mode: 755
+    type:
+      - directory
+
+hooks:
+  ApplicationStop:
+    - location: scripts/stop_server.sh
+      timeout: 60
+      runas: root
+
+  BeforeInstall:
+    - location: scripts/before_install.sh
+      timeout: 120
+      runas: root
+
+  AfterInstall:
+    - location: scripts/after_install.sh
+      timeout: 180
+      runas: ec2-user
+
+  ApplicationStart:
+    - location: scripts/start_server.sh
+      timeout: 120
+      runas: root
+
+  ValidateService:
+    - location: scripts/validate_service.sh
+      timeout: 120
+      runas: ec2-user

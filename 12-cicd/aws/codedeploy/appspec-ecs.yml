@@ -1,0 +1,23 @@
+# ──────────────────────────────────────────────────────────────
+# CodeDeploy appspec for ECS Blue/Green deployments.
+# CodeDeploy registers the new (green) task set, shifts ALB traffic
+# from blue → green per the deployment config, then drains blue.
+# ──────────────────────────────────────────────────────────────
+version: 0.0
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: <TASK_DEFINITION>   # placeholder replaced at deploy time
+        LoadBalancerInfo:
+          ContainerName: app
+          ContainerPort: 3000
+        PlatformVersion: LATEST
+
+# Lambda hooks let you run validation between traffic-shift steps.
+Hooks:
+  - BeforeInstall:        "ArnOfLambda_PreTrafficValidation"
+  - AfterInstall:         "ArnOfLambda_PostInstallCheck"
+  - AfterAllowTestTraffic: "ArnOfLambda_TestTrafficValidation"
+  - BeforeAllowTraffic:   "ArnOfLambda_PreProdValidation"
+  - AfterAllowTraffic:    "ArnOfLambda_PostProdValidation"
