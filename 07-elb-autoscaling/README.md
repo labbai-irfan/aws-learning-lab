@@ -29,6 +29,7 @@ Authored as a structured program by an **AWS Load Balancing Architect**. Builds 
 | 7 | 100 MCQs | [07-100-mcqs.md](07-100-mcqs.md) | 2 hrs |
 | 8 | 100 Interview Questions | [08-100-interview-questions.md](08-100-interview-questions.md) | 2 hrs |
 | 9 | Cheat Sheet (1-page revision) | [09-cheatsheet.md](09-cheatsheet.md) | 30 min |
+| 10 | **Capstone Project:** HA auto-scaling web tier (ALB + ASG + Multi-AZ) | [project/README.md](project/README.md) | 5+ hrs |
 
 **Total:** ~22 hours.
 

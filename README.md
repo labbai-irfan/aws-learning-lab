@@ -76,7 +76,7 @@ Original readiness breakdown: [REPOSITORY-AUDIT-AND-ROADMAP.md](REPOSITORY-AUDIT
 
 ## 🏢 Building the HRMS Project Alongside
 
-This stack — **React/TS/Vite + Node/Express/Prisma + MySQL** — is wired into the curriculum. Each phase contributes infrastructure you actually use:
+This stack — **React/TS/Vite + Node/Express/Prisma + MySQL** — is wired into the curriculum. Each phase contributes infrastructure you actually use. **➡️ Step-by-step build track: [HRMS-TRACK.md](HRMS-TRACK.md)** (the exact task to do to *your* app in each phase).
 
 | Phase | HRMS contribution |
 |---|---|
@@ -135,7 +135,7 @@ NN-phase-name/
 
 ## 📌 Repository Status & Roadmap
 
-This repo was audited and restructured on **2026-06-17** (duplicate phase numbers resolved, dependency order corrected, broken links fixed). Remaining planned work (cheat sheets, a few service deep-dives like DynamoDB/Cognito, per-phase certification mapping) is tracked in the **[Improvement Roadmap](REPOSITORY-AUDIT-AND-ROADMAP.md#final--improvement-roadmap)**.
+This repo was audited and restructured on **2026-06-17** (duplicate phase numbers resolved, dependency order corrected, broken links fixed), then filled out: every phase now has notes, architecture, labs, troubleshooting, a cheat sheet, MCQs/interview practice, and a project; new modules added (DynamoDB, Auto Scaling, Cognito, X-Ray, Systems Manager, AWS Config, EFS/FSx, Kinesis, SAM/Beanstalk); plus a [services index](SERVICES-INDEX.md), [glossary](GLOSSARY.md), and [certification guide](CERTIFICATION-GUIDE.md). A **[CI guard](.github/workflows/repo-guard.yml)** enforces no broken links / duplicate phase numbers on every push. The original audit and remaining external items (timed mock exams, a few SAA breadth specialties) are tracked in the **[Improvement Roadmap](REPOSITORY-AUDIT-AND-ROADMAP.md#final--improvement-roadmap)**.
 
 ## 📖 Official AWS References
 

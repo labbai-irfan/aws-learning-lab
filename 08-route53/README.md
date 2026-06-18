@@ -28,8 +28,9 @@ Authored as a structured program by an **AWS DNS Expert**. Builds on [Phase 01 â
 | 6 | 50 Scenario Questions | [06-50-scenario-questions.md](06-50-scenario-questions.md) | 2 hrs |
 | 7 | 100 MCQs | [07-100-mcqs.md](07-100-mcqs.md) | 2 hrs |
 | 8 | Cheat Sheet (1-page revision) | [08-cheatsheet.md](08-cheatsheet.md) | 30 min |
+| 9 | **Capstone Project:** Resilient DNS (failover + latency routing) | [project/README.md](project/README.md) | 3+ hrs |
 
-**Total:** ~15 hours.
+**Total:** ~18 hours.
 
 ---
 
