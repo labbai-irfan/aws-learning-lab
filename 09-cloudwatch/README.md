@@ -36,10 +36,11 @@ Authored as a structured program by an **AWS Monitoring Specialist**. Builds on 
 | 14 | 100 MCQs | [14-100-mcqs.md](14-100-mcqs.md) | 2 hrs |
 | 15 | Hands-on Labs | [15-labs.md](15-labs.md) | 3 hrs |
 | 16 | AWS X-Ray (distributed tracing & ServiceLens) | [16-x-ray.md](16-x-ray.md) | 2 hrs |
-| 17 | Cheat Sheet (1-page revision) | [17-cheatsheet.md](17-cheatsheet.md) | 30 min |
-| 18 | **Capstone Project:** Full observability for HRMS | [project/README.md](project/README.md) | 6+ hrs |
+| 17 | AWS Systems Manager (Session Manager, Parameter Store, Patch, Automation) | [17-systems-manager.md](17-systems-manager.md) | 2 hrs |
+| 18 | Cheat Sheet (1-page revision) | [18-cheatsheet.md](18-cheatsheet.md) | 30 min |
+| 19 | **Capstone Project:** Full observability for HRMS | [project/README.md](project/README.md) | 6+ hrs |
 
-**Total:** ~37 hours.
+**Total:** ~39 hours.
 
 ---
 

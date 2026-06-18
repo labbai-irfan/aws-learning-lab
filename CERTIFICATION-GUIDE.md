@@ -7,7 +7,7 @@
 | Cloud Practitioner | CLF-C02 | **~88%** | Beginners, breadth, non-engineers |
 | Solutions Architect Associate | SAA-C03 | **~80%** | Designing AWS systems |
 | Developer Associate | DVA-C02 | **~78%** | Building apps on AWS |
-| DevOps Engineer Professional | DOP-C02 | **~58%** | CI/CD, IaC, ops at scale |
+| DevOps Engineer Professional | DOP-C02 | **~62%** | CI/CD, IaC, ops at scale |
 
 Legend: ✅ well covered · 🟡 partial · ❌ gap to fill.
 
@@ -60,20 +60,20 @@ Legend: ✅ well covered · 🟡 partial · ❌ gap to fill.
 | Domain (weight) | Covered by | Status |
 |---|---|---|
 | **SDLC Automation (22%)** | [12 CI/CD](12-cicd/README.md) (pipelines, blue/green, canary) | ✅ |
-| **Configuration Mgmt & IaC (17%)** | [13 Terraform](13-advanced-aws/04-terraform.md)/[CloudFormation](13-advanced-aws/05-cloudformation.md) | 🟡 (add Systems Manager) |
+| **Configuration Mgmt & IaC (17%)** | [13 Terraform](13-advanced-aws/04-terraform.md)/[CloudFormation](13-advanced-aws/05-cloudformation.md), [09 Systems Manager](09-cloudwatch/17-systems-manager.md) | ✅ |
 | **Resilient Cloud Solutions (15%)** | [07 ASG](07-elb-autoscaling/06-auto-scaling.md), [13 multi-Region/DR](13-advanced-aws/09-multi-region-dr.md) | ✅ |
 | **Monitoring & Logging (15%)** | [09 CloudWatch + X-Ray](09-cloudwatch/README.md) | ✅ |
 | **Incident & Event Response (14%)** | [02 incident response](02-iam-security/08-incident-response-examples.md), [09 EventBridge/alarms](09-cloudwatch/06-events.md) | 🟡 |
 | **Security & Compliance (17%)** | [02 IAM/GuardDuty/Config/Security Hub](02-iam-security/README.md) | ✅ |
 
 **Study path:** Phases 11→12→13 + 09 + 02, emphasizing automation and IaC.
-**Gaps to close (Pro-level depth):** **Systems Manager** (Automation, Patch, Parameter Store, Session Manager), **AWS Config** conformance packs + auto-remediation, advanced **EventBridge** automation, **CodeDeploy** deep config, OpsWorks/Beanstalk deploys. **Verdict: ~58% — strong CI/CD + IaC base; needs SSM/Config automation depth.**
+**Gaps to close (Pro-level depth):** **AWS Config** conformance packs + auto-remediation, advanced **EventBridge** automation, **CodeDeploy** deep config, OpsWorks/Beanstalk deploys. (**Systems Manager** is now covered — [09/17](09-cloudwatch/17-systems-manager.md).) **Verdict: ~62% — strong CI/CD + IaC + SSM base; needs Config automation depth.**
 
 ---
 
 ## Cross-exam gap backlog (build these to raise scores)
 1. **DynamoDB** ✅ done · **Cognito** ✅ done · **X-Ray** ✅ done · **Auto Scaling** ✅ done.
-2. **Systems Manager (SSM)** module — DevOps Pro + ops. ❌
+2. **Systems Manager (SSM)** ✅ done — [09/17](09-cloudwatch/17-systems-manager.md).
 3. **EFS/FSx, Kinesis/Athena/Glue, Storage Gateway/DataSync** — SAA breadth. ❌
 4. **SAM + Elastic Beanstalk** — DVA deployment. ❌
 5. **AWS Config conformance + auto-remediation** — DevOps Pro. ❌
